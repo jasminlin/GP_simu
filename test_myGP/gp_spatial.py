@@ -1,43 +1,46 @@
 '''
-Created on 20150203
+Created on 20160203
 
 @author: linlu 
 '''
 
 import numpy as np
 from scipy import stats
-miss_division = 10
+miss_division = 5
 
-class TSP:
-    
+class GP_spatial:
+
+    # train: calculate prior mu and K
     def __init__(self, traindata):
         
-        # Generate mu from train data
+        # Generate mu from training data
         mu = np.sum(traindata,axis = 0)
         mu = mu / len(traindata)
         self._mu = np.sum(mu,axis=0)
         self._mu = self._mu / len(mu)
         
-        # Generate K from train data
+        # Generate K from training data
         self._K = np.array([[0] * len(traindata[0][0])] * len(traindata[0][0]))
         for d in range(len(traindata)):
             for t in range(len(traindata[d])):
-                for s in range(len(traindata[0])):
-                    for s1 in range(len(traindata[0])):
+                for s in range(len(traindata[0][0])):
+                    for s1 in range(len(traindata[0][0])):
                         self._K[s][s1] += (traindata[d][t][s] - self._mu[s]) * (traindata[d][t][s1] - self._mu[s1])
+
         self._K = self._K / (len(traindata)*len(traindata[0]))
         
         # Generate noise sigma
         self._sigma2 = np.matrix(10 * np.identity(len(traindata[0][0]), float))
         
     def gaussian_process(self, test_sp):
-        
+
         RMSE = list()
         MAPE = list()
         mu = list()
         k = list()
         speed = list()
         ksscore = list()
+
 
         testdata = test_sp[0]
         # Calculate the average speed over all the time slices

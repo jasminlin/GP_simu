@@ -28,7 +28,7 @@ sigma = 10.
 # mu = np.array([random.uniform(10,50) for i in range(linkM)])
 mu = np.array([30. for i in range(linkM)])
 
-data_dir = './GP_simu/GPsimu/M_' + str(grid_edge)
+data_dir = './GP_simu/M_' + str(grid_edge)
 # data_dir = './mean_M_' + str(int(grid_edge))
 
 def gen_grid():
