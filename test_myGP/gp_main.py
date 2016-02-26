@@ -31,10 +31,10 @@ miss_ratio = [0.5]
 train_mode_list = ['all', 'weekday', 'same']
 gp_model_list = ['GP_spatial','GP_temporal', 'GP']
 
-root_dir = '/Users/lulin/baiduyun/intern/data-preanalysis/output_analysis_results/records/near'
-output_dir = '/Users/lulin/baiduyun/intern/data-preanalysis/output_analysis_results/predict-results/near/'
-# root_dir = '/home/xiaoju/user/linlu/data-preanalysis/records/near'
-# output_dir = '/home/xiaoju/user/linlu/data-preanalysis/predict-results/near/'
+# root_dir = '/Users/lulin/baiduyun/intern/data-preanalysis/output_analysis_results/records/near'
+# output_dir = '/Users/lulin/baiduyun/intern/data-preanalysis/output_analysis_results/predict-results/near/'
+root_dir = '/home/xiaoju/user/linlu/data-preanalysis/records/near'
+output_dir = '/home/xiaoju/user/linlu/data-preanalysis/predict-results/near/'
 
 data_relative_dir = '/data-gp/'
 speed_relative_path = 'gp_impu.txt'
