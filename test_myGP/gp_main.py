@@ -195,6 +195,7 @@ if __name__ == '__main__':
     # traindata_mode = 'weekday'
     # window_size = 15
 
+    print 'begin...'
     dir_list = os.walk(root_dir)
     for root, dirs, files in dir_list:
 
