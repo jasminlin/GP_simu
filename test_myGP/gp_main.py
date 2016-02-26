@@ -31,13 +31,15 @@ miss_ratio = [0.5]
 train_mode_list = ['all', 'weekday', 'same']
 gp_model_list = ['GP_spatial','GP_temporal', 'GP']
 
-# data_dir = '/Users/lulin/baiduyun/intern/GP/GP_simu/simu_code/GP_simu/M_10/'
 root_dir = '/Users/lulin/baiduyun/intern/data-preanalysis/output_analysis_results/records/near'
+output_dir = '/Users/lulin/baiduyun/intern/data-preanalysis/output_analysis_results/predict-results/near/'
+# root_dir = '/home/xiaoju/user/linlu/data-preanalysis/records/near'
+# output_dir = '/home/xiaoju/user/linlu/data-preanalysis/predict-results/near/'
+
 data_relative_dir = '/data-gp/'
 speed_relative_path = 'gp_impu.txt'
 date_relative_path = 'date.txt'
 
-output_dir = './'
 
 def load_speeds(filepath):
     print 'begin loading speed data...'
@@ -165,6 +167,7 @@ def ouput_model_eval(result_dir, results, mapes, rmses):
 
     # plot true vs. pred
 
+
    # save results to file
     fout_mape = open(result_dir + 'mape_' +
                      str(traindata_mode) + '_' + str(window_size) + '.txt', 'w')
@@ -188,12 +191,11 @@ if __name__ == '__main__':
     traindata_mode = sys.argv[2]
     window_size = int(sys.argv[3])
 
-    # model = 'GP'
+    # model = 'GP_spatial'
     # traindata_mode = 'weekday'
     # window_size = 15
 
     dir_list = os.walk(root_dir)
-    dir_n = 0
     for root, dirs, files in dir_list:
 
         # not data folder
@@ -203,13 +205,6 @@ if __name__ == '__main__':
 
         if (last_namefield.isdigit() == False) or (last_namefield.startswith('2015')):
             continue
-
-        dir_n += 1
-        if dir_n == 1:
-            continue
-
-        print last_namefield
-        print root
 
         (speeds, dateD, timeT, linkM) = load_speeds(root + data_relative_dir + speed_relative_path)
         print last_namefield, speeds.shape

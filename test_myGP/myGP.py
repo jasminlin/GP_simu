@@ -44,7 +44,7 @@ class GP_spatial:
         
         # Generate noise sigma
         self._sigma2 = np.matrix(5. * np.identity(len(traindata[0][0]), float))
-        print '---------- imputation num: mu-%d, k_s-%d, k_t-%d' % (num_impu_mu, num_impu_k)
+        print '---------- imputation num: mu-%d, k-%d' % (num_impu_mu, num_impu_k)
 
 
     # test on single time index: randomly miss some links
