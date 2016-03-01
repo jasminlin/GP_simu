@@ -71,7 +71,7 @@ class GP_spatial:
                                        +self._sigma2[observe_idx,:][:,observe_idx]).I),\
                                         self._K[observe_idx,s1])
 
-            result_s[s1] = (testdata[s1], mu_post.A[0][0], k_post.A[0][0])
+            result_s[s1] = (testdata[s1], mu_post.A[0][0], self._mu[s1], k_post.A[0][0])
 
         return result_s
         
@@ -104,14 +104,14 @@ class GP_temporal:
                     non_imputation_idx = (traindata[:,t1,s] != -1) & (traindata[:,t2,s] != -1)
                     if non_imputation_idx.sum() == 0:
                         num_impu_k += 1
-                        self._K[s][t1][t2] = 5.
+                        self._K[s][t1][t2] = random.uniform(0,5)
                     else:
                         k_temp = (traindata[non_imputation_idx,t1,s] - self._mu[s][t1])\
                              * (traindata[non_imputation_idx,t2,s] - self._mu[s][t2])
                         self._K[s][t1][t2] = np.sum(k_temp) / non_imputation_idx.sum()
 
         # Generate noise sigma
-        self._sigma2 = np.array([[[0.] * timeT] * timeT] * linkN)
+        self._sigma2 = [0.]*linkN
         for s in range(linkN):
             self._sigma2[s] = np.matrix(5. * np.identity(timeT, float))
         print '---------- imputation num: mu-%d, k-%d' % (num_impu_mu, num_impu_k)
@@ -131,15 +131,13 @@ class GP_temporal:
                 # posterior mu and k for every missing link
                 # !!! a block of array is a[b,:][:,b], not a[b,b]!!!
                 mu_post = self._mu[s][t] + np.dot( np.dot(self._K[s][observe_idx,t].T, \
-                                          np.matrix(self._K[s][observe_idx,:][:,observe_idx]\
-                                           +self._sigma2[s][observe_idx,:][:,observe_idx]).I),\
+                                          (self._K[s]+self._sigma2[s])[observe_idx,:][:,observe_idx].I),\
                                    (testdata_impu[s][observe_idx]-self._mu[s][observe_idx]))
                 k_post = self._K[s][t][t] - np.dot( np.dot(self._K[s][observe_idx,t].T, \
-                                          np.matrix(self._K[s][observe_idx,:][:,observe_idx]\
-                                           +self._sigma2[s][observe_idx,:][:,observe_idx]).I),\
+                                          (self._K[s]+self._sigma2[s])[observe_idx,:][:,observe_idx].I),\
                                             self._K[s][observe_idx,t])
 
-                result_s[(s,t)] = (testdata[t][s], mu_post.A[0][0], k_post.A[0][0])
+                result_s[(s,t)] = (testdata[t][s], mu_post.A[0][0], self._mu[s][t], k_post.A[0][0])
 
         return result_s
 
@@ -251,6 +249,6 @@ class GP:
                             +self._sigma2[observe_idx_flatten,:][:,observe_idx_flatten]).I),\
                             self._K[observe_idx_flatten,linkN * t + s])
 
-                result_s[(t,s)] = (testdata[t][s], mu_post.A[0][0], k_post.A[0][0])
+                result_s[(t,s)] = (testdata[t][s], mu_post.A[0][0], self._mu[linkN * t + s], k_post.A[0][0])
 
         return result_s

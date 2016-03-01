@@ -23,6 +23,7 @@ import csv
 import os
 import numpy as np
 import sys
+import matplotlib.pyplot as plt
 
 import myGP
 
@@ -30,6 +31,9 @@ import myGP
 miss_ratio = [0.5]
 train_mode_list = ['all', 'weekday', 'same']
 gp_model_list = ['GP_spatial','GP_temporal', 'GP']
+model = 'GP_temporal'
+traindata_mode = 'weekday'
+window_size = 15
 
 root_dir = '/Users/lulin/baiduyun/intern/data-preanalysis/output_analysis_results/records/near'
 output_dir = '/Users/lulin/baiduyun/intern/data-preanalysis/output_analysis_results/predict-results/near/'
@@ -175,14 +179,46 @@ def predict_by_GP_daily(traindata, testdata, model, miss_idx, observe_idx):
 
     return (results, mapes, rmses)
 
-def ouput_model_eval(result_dir, results, mapes, rmses):
+def ouput_model_eval(result_dir, traindata, testdata, results, mapes, rmses):
 
     # average mape and rmse for every link
     mape_by_s = np.sum(mapes, axis=0) / (mapes != 0).sum(0)
     rmse_by_s = np.sqrt(np.sum(rmses, axis=0) / (mapes != 0).sum(0))
 
     # plot true vs. pred
+    # links =
+    # if traindata_mode == 'GP_temporal':
+    #
+    # for
+    # fout_fig_wave = result_dir + 'wave_' + \
+    #                 str(traindata_mode) + '_' + str(window_size) + '_' +  + '.png'
+    # f = plt.figure(2,figsize=(8,5))
+    # plt.xlim((1,288))
+    # plt.grid(True)
+    # plt.xticks([i for i in range(1,288,24)])
+    #
+    # plt.subplot(311)
+    # plt.title(linkeid)
+    # plt.grid(True)
+    # plt.xticks([i for i in range(1,288,24)])
+    # plt.plot(x_mean, y_mean_bytime)
+    # plt.ylabel('mean')
+    #
+    # f.savefig(fout_fig_wave)
 
+    # output true and pred value
+    fout_true_pred = open(result_dir + 'true_pred_' +
+                          str(traindata_mode) + '_' + str(window_size) + '.txt', 'w')
+    if model == 'GP_temporal':
+        fout_true_pred.write('s,t,true,pred,mu\n')
+
+    else:
+        fout_true_pred.write('t,s,true,pred,mu\n')
+    for k_ts, r_s in results.iteritems():
+        if r_s[0] == -1.:
+            continue
+        fout_true_pred.write(str(k_ts[0]) + ',' + str(k_ts[1]) + ',' + ','.join(map(str,r_s)) + '\n')
+    fout_true_pred.close()
 
    # save results to file
     fout_mape = open(result_dir + 'mape_' +
@@ -267,7 +303,7 @@ if __name__ == '__main__':
                                           (str(last_namefield), ratio, test_datestr, model)
                 if os.path.exists(result_dir) == False:
                     os.makedirs(result_dir)
-                ouput_model_eval(result_dir, results, mapes, rmses)
+                ouput_model_eval(result_dir, traindata, testdata, results, mapes, rmses)
 
         # break
 
