@@ -31,15 +31,14 @@ miss_ratio = [0.5]
 train_mode_list = ['all', 'weekday', 'same']
 gp_model_list = ['GP_spatial','GP_temporal', 'GP']
 
-# root_dir = '/Users/lulin/baiduyun/intern/data-preanalysis/output_analysis_results/records/near'
-# output_dir = '/Users/lulin/baiduyun/intern/data-preanalysis/output_analysis_results/predict-results/near/'
-root_dir = '/home/xiaoju/user/linlu/data-preanalysis/records/near'
-output_dir = '/home/xiaoju/user/linlu/data-preanalysis/predict-results/near/'
+root_dir = '/Users/lulin/baiduyun/intern/data-preanalysis/output_analysis_results/records/near'
+output_dir = '/Users/lulin/baiduyun/intern/data-preanalysis/output_analysis_results/predict-results/near/'
+# root_dir = '/home/xiaoju/user/linlu/data-preanalysis/records/near'
+# output_dir = '/home/xiaoju/user/linlu/data-preanalysis/predict-results/near/'
 
 data_relative_dir = '/data-gp/'
 speed_relative_path = 'gp_impu.txt'
 date_relative_path = 'date.txt'
-
 
 def load_speeds(filepath):
     print 'begin loading speed data...'
@@ -118,11 +117,15 @@ def predict_by_GP_daily(traindata, testdata, model, miss_idx, observe_idx):
     # GP: predict speed
     # results[(s,d,t)] = (true_speed, pred_speed, k)
     results = defaultdict(lambda :0)
-    mapes = np.array([[0.] * (len(miss_idx) + len(observe_idx))] * len(testdata))
-    rmses = np.array([[0.] * (len(miss_idx) + len(observe_idx))] * len(testdata))
+    linkN = testdata.shape[1]
+    timeT = testdata.shape[0]
 
-    # return resutls = linkN * timeT
+    # return resutls(t,s) = timeT * (miss linkN)
+    # mape = timeT * linkN
     if model == gp_model_list[0]:
+        mapes = np.array([[0.] * linkN] * timeT)
+        rmses = np.array([[0.] * linkN] * timeT)
+
         trainer = myGP.GP_spatial(traindata)
         print '----- %s train succeed: mu size %d' % (model, len(trainer._mu))
 
@@ -137,15 +140,28 @@ def predict_by_GP_daily(traindata, testdata, model, miss_idx, observe_idx):
                     continue
                 mapes[t][s] = np.absolute(r_s[0] - r_s[1]) / (r_s[0] + 1e-4)
                 rmses[t][s] = np.power(r_s[0] - r_s[1], 2)
-
+    # return resutls(s,t) = linkN * (miss timeT)
+    # mape = linkN * timeT
     elif model == gp_model_list[1]:
+        mapes = np.array([[0.] * timeT] * linkN)
+        rmses = np.array([[0.] * timeT] * linkN)
+
         trainer = myGP.GP_temporal(traindata)
         print '----- %s train succeed: mu size %d' % (model, len(trainer._mu))
 
         #test
         results = trainer.gp(testdata, miss_idx, observe_idx)
-
+        for k_ts, r_s in results.iteritems():
+            if r_s[0] == -1.:
+                continue
+            mapes[k_ts[0]][k_ts[1]] = np.absolute(r_s[0] - r_s[1]) / (r_s[0] + 1e-4)
+            rmses[k_ts[0]][k_ts[1]] = np.power(r_s[0] - r_s[1], 2)
+    # return results = timeT * (miss linkN)
+    # mape = timeT * linkN
     elif model == gp_model_list[2]:
+        mapes = np.array([[0.] * linkN] * timeT)
+        rmses = np.array([[0.] * linkN] * timeT)
+
         trainer = myGP.GP(traindata)
         print '----- %s train succeed: mu size %d' % (model, len(trainer._mu))
 
@@ -184,16 +200,16 @@ def ouput_model_eval(result_dir, results, mapes, rmses):
 
 if __name__ == '__main__':
 
-    if len(sys.argv) != 4:
-        print 'wrong parameters!'
+    # if len(sys.argv) != 4:
+    #     print 'wrong parameters!'
+    #
+    # model = sys.argv[1]
+    # traindata_mode = sys.argv[2]
+    # window_size = int(sys.argv[3])
 
-    model = sys.argv[1]
-    traindata_mode = sys.argv[2]
-    window_size = int(sys.argv[3])
-
-    # model = 'GP_spatial'
-    # traindata_mode = 'weekday'
-    # window_size = 15
+    model = 'GP_temporal'
+    traindata_mode = 'weekday'
+    window_size = 15
 
     print 'begin...'
     dir_list = os.walk(root_dir)
@@ -218,13 +234,20 @@ if __name__ == '__main__':
 
         # different missing ratio
         for ratio in miss_ratio:
-            # randomly miss links with ratio
-            idx = range(linkM);
 
-            # random.shuffle(idx);
-            # here we fix the missing links first
+            # for GP and GP_spatial
+            if model == 'GP' or model == 'GP_spatial':
+                # randomly miss links with ratio
+                idx = range(linkM);
+                # random.shuffle(idx);
+                tn = int(np.floor(linkM*ratio));
+            # for GP_temporal
+            elif model == 'GP_temporal':
+                # randomly miss some time idx
+                idx = range(timeT)
+                random.shuffle(idx);
+                tn = int(np.floor(timeT*ratio));
 
-            tn = int(np.floor(linkM*ratio));
             miss_idx = idx[:tn]
             observe_idx = idx[tn:]
 
